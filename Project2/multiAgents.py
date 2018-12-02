@@ -74,28 +74,35 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         remainFood = newFood.asList()
+        countFood = len(remainFood)
         newGhostsPos = successorGameState.getGhostPositions()
-        foodPoints = 0         # the sum of fractions 1 / manhattanDistances
-        ghostPoints = 0
+        distances = []
 
-        # if pacman eats food in the new position
-        if currentGameState.hasFood(newPos[0], newPos[1]):
-            foodPoints += 1
-
+        # store all manhattan distances from food
         for f in remainFood:
-            foodPoints += 1 / manhattanDistance(newPos, f)
+            distances.append(manhattanDistance(newPos, f))
+
+        # find minimum distance
+        if countFood == 0 :
+            minDistance = 0
+        else:
+            # add to minimum distance the remaining food so that positions that
+            # have food (meaning they have lower countFood than the others)
+            # will get an advantage (and to make this advantage distinct multiply
+            # by a high number)
+            minDistance = min(distances) + countFood * 1000
+
+        # the highest value should be the optimal move so the least minimum
+        # distance should be changed to the highest value
+        value = -minDistance
 
         for g in newGhostsPos:
-            mdGhost = manhattanDistance(newPos, g)
-            if mdGhost == 0:
-                ghostPoints -= len(remainFood)
-            elif mdGhost <= 3:
-                ghostPoints -= len(remainFood) / mdGhost
+            # if a ghost is getting very close (maximum one cell away)
+            # set a very low value
+            if manhattanDistance(newPos, g) <= 1:
+                value -= 100000
 
-        func = foodPoints + ghostPoints
-
-        # return func
-        return successorGameState.getScore() + func
+        return value
 
 def scoreEvaluationFunction(currentGameState):
     """
