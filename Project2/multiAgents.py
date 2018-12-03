@@ -161,16 +161,20 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
 
-        countAgents = gameState.getNumAgents()
+        countGhosts = gameState.getNumAgents() - 1
 
-        util.raiseNotDefined()
+        return self.minimax(gameState, 0, countGhosts, 0)[1]
 
-    def minimax(self, gameState, agent, countAgents):
+    def minimax(self, gameState, agent, countGhosts, depth):
         # if TERMINAL-TEST(state) then return UTILITY(state)
-        if gameState.getLegalActions(agent) == 0:
-            return self.evaluationFunction(gameState, action)
+        if not gameState.getLegalActions(agent):
+            return (self.evaluationFunction(gameState), 0)
 
-        # max
+        # if maximum depth is reached
+        if depth == self.depth:
+            return (self.evaluationFunction(gameState), 0)
+
+        # max (pacman)
         if agent == 0:
             # v <- -inf
             value = -100000
@@ -178,19 +182,29 @@ class MinimaxAgent(MultiAgentSearchAgent):
             minimaxValues = []
             for a in actions:
                 state = gameState.generateSuccessor(agent, a)
-                minimaxValues.append(minimax(state, 1, countAgents))
+                countGhosts = gameState.getNumAgents() - 1
+                minimaxValues.append(self.minimax(state, 1, countGhosts, depth)[0])
             value = max(minimaxValues)
-        # min
+            evaluatedAction = actions[minimaxValues.index(value)]
+        # min (ghost)
         else:
+            # if this is the last ghost to call minimax for this height, increase depth
+            if countGhosts == 1:
+                depth += 1
+                nextAgent = 0
+            else:
+                nextAgent = agent + 1
+            countGhosts -= 1
             # v <- +inf
             value = 100000
             actions = gameState.getLegalActions(agent)
             minimaxValues = []
             for a in actions:
                 state = gameState.generateSuccessor(agent, a)
-                minimaxValues.append(minimax(state, 1, countAgents))
-            value = max(minimaxValues)
-        return value
+                minimaxValues.append(self.minimax(state, nextAgent, countGhosts, depth)[0])
+            value = min(minimaxValues)
+            evaluatedAction = actions[minimaxValues.index(value)]
+        return (value, evaluatedAction)
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
