@@ -83,13 +83,14 @@ class ReflexAgent(Agent):
             distances.append(manhattanDistance(newPos, f))
 
         # find minimum distance
-        if countFood == 0 :
+        if countFood == 0:
             minDistance = 0
         else:
             # add to minimum distance the remaining food so that positions that
             # have food (meaning they have lower countFood than the others)
-            # will get an advantage (and to make this advantage distinct multiply
-            # by a high number)
+            # will get an advantage (and to make this advantage distinct, multiply
+            # by a high number because a position with no food might have the same
+            # value with one that has food, if a high number is not provided)
             minDistance = min(distances) + countFood * 1000
 
         # the highest value should be the optimal move so the least minimum
@@ -98,8 +99,11 @@ class ReflexAgent(Agent):
 
         for g in newGhostsPos:
             # if a ghost is getting very close (maximum one cell away)
-            # set a very low value
-            if manhattanDistance(newPos, g) <= 1:
+            # set a very low value (but if ghost catches pacman set an even lower
+            # value)
+            if manhattanDistance(newPos, g) == 0:
+                value -= 10000000
+            elif manhattanDistance(newPos, g) == 1:
                 value -= 100000
 
         return value
@@ -156,8 +160,38 @@ class MinimaxAgent(MultiAgentSearchAgent):
           gameState.getNumAgents():
             Returns the total number of agents in the game
         """
-        "*** YOUR CODE HERE ***"
+
+        countAgents = gameState.getNumAgents()
+
         util.raiseNotDefined()
+
+    def minimax(self, gameState, agent, countAgents):
+        # if TERMINAL-TEST(state) then return UTILITY(state)
+        if gameState.getLegalActions(agent) == 0:
+            return self.evaluationFunction(gameState, action)
+
+        # max
+        if agent == 0:
+            # v <- -inf
+            value = -100000
+            actions = gameState.getLegalActions(agent)
+            minimaxValues = []
+            for a in actions:
+                state = gameState.generateSuccessor(agent, a)
+                minimaxValues.append(minimax(state, 1, countAgents))
+            value = max(minimaxValues)
+        # min
+        else:
+            # v <- +inf
+            value = 100000
+            actions = gameState.getLegalActions(agent)
+            minimaxValues = []
+            for a in actions:
+                state = gameState.generateSuccessor(agent, a)
+                minimaxValues.append(minimax(state, 1, countAgents))
+            value = max(minimaxValues)
+        return value
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
