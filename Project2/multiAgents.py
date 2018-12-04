@@ -219,9 +219,9 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         countGhosts = gameState.getNumAgents() - 1
         alpha = -100000
         beta = 100000
-        return self.AlphaBetaPruning(gameState, 0, countGhosts, 0, alpha, beta)[1]
+        return self.alphaBetaPruning(gameState, 0, countGhosts, 0, alpha, beta)[1]
 
-    def AlphaBetaPruning(self, gameState, agent, countGhosts, depth, alpha, beta):
+    def alphaBetaPruning(self, gameState, agent, countGhosts, depth, alpha, beta):
         if not gameState.getLegalActions(agent):
             return (self.evaluationFunction(gameState), 0)
 
@@ -232,14 +232,14 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         # max (pacman)
         if agent == 0:
             # v <- -inf
-            value = -10000000
+            value = -1000000
             actions = gameState.getLegalActions(agent)
             minimaxValues = []
             index = -1
             for a in actions:
                 state = gameState.generateSuccessor(agent, a)
                 countGhosts = gameState.getNumAgents() - 1
-                value = max(value, self.AlphaBetaPruning(state, 1, countGhosts, depth, alpha, beta)[0])
+                value = max(value, self.alphaBetaPruning(state, 1, countGhosts, depth, alpha, beta)[0])
                 minimaxValues.append(value)
                 index += 1
                 alpha = max(alpha, value)
@@ -248,6 +248,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             evaluatedAction = actions[minimaxValues.index(value)]
         # min (ghost)
         else:
+            # if this is the last ghost to call alphaBetaPruning for this height, increase depth
             if countGhosts == 1:
                 depth += 1
                 nextAgent = 0
@@ -255,13 +256,13 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 nextAgent = agent + 1
             countGhosts -= 1
             # v <- +inf
-            value = 10000000
+            value = 1000000
             actions = gameState.getLegalActions(agent)
             minimaxValues = []
             index = -1
             for a in actions:
                 state = gameState.generateSuccessor(agent, a)
-                value = min(value, self.AlphaBetaPruning(state, nextAgent, countGhosts, depth, alpha, beta)[0])
+                value = min(value, self.alphaBetaPruning(state, nextAgent, countGhosts, depth, alpha, beta)[0])
                 index += 1
                 minimaxValues.append(value)
                 beta = min(beta, value)
@@ -282,8 +283,50 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           All ghosts should be modeled as choosing uniformly at random from their
           legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        countGhosts = gameState.getNumAgents() - 1
+
+        return self.expectimax(gameState, 0, countGhosts, 0)[1]
+
+    def expectimax(self, gameState, agent, countGhosts, depth):
+        # if TERMINAL-TEST(state) then return UTILITY(state)
+        if not gameState.getLegalActions(agent):
+            return (self.evaluationFunction(gameState), 0)
+
+        # if maximum depth is reached
+        if depth == self.depth:
+            return (self.evaluationFunction(gameState), 0)
+
+        # max (pacman)
+        if agent == 0:
+            # v <- -inf
+            value = -100000
+            actions = gameState.getLegalActions(agent)
+            expectimaxValues = []
+            for a in actions:
+                state = gameState.generateSuccessor(agent, a)
+                countGhosts = gameState.getNumAgents() - 1
+                expectimaxValues.append(self.expectimax(state, 1, countGhosts, depth)[0])
+            value = max(expectimaxValues)
+            evaluatedAction = actions[expectimaxValues.index(value)]
+        # min (ghost)
+        else:
+            # if this is the last ghost to call expectimax for this height, increase depth
+            if countGhosts == 1:
+                depth += 1
+                nextAgent = 0
+            else:
+                nextAgent = agent + 1
+            countGhosts -= 1
+            # v <- +inf
+            value = 100000
+            actions = gameState.getLegalActions(agent)
+            expectimaxValues = []
+            for a in actions:
+                state = gameState.generateSuccessor(agent, a)
+                expectimaxValues.append(self.expectimax(state, nextAgent, countGhosts, depth)[0])
+                evaluatedAction = a
+            value = sum(expectimaxValues) / len(actions)
+        return (value, evaluatedAction)
 
 def betterEvaluationFunction(currentGameState):
     """
