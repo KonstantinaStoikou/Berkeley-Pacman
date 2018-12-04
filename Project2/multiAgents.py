@@ -217,12 +217,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         countGhosts = gameState.getNumAgents() - 1
-        a = -100000
-        b = 100000
-        return self.AlphaBetaPruning(gameState, 0, countGhosts, 0, a, b)[1]
+        alpha = -100000
+        beta = 100000
+        return self.AlphaBetaPruning(gameState, 0, countGhosts, 0, alpha, beta)[1]
 
-    def AlphaBetaPruning(self, gameState, agent, countGhosts, depth, a, b):
-        # if TERMINAL-TEST(state) then return UTILITY(state)
+    def AlphaBetaPruning(self, gameState, agent, countGhosts, depth, alpha, beta):
         if not gameState.getLegalActions(agent):
             return (self.evaluationFunction(gameState), 0)
 
@@ -233,22 +232,22 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         # max (pacman)
         if agent == 0:
             # v <- -inf
-            value = -100000
+            value = -10000000
             actions = gameState.getLegalActions(agent)
             minimaxValues = []
+            index = -1
             for a in actions:
                 state = gameState.generateSuccessor(agent, a)
                 countGhosts = gameState.getNumAgents() - 1
-                v = self.AlphaBetaPruning(state, 1, countGhosts, depth, a, b)
-                if v[0] > b:
-                    return v
-                minimaxValues.append(v[0])
-                a = max(a, v[0])
-            value = max(minimaxValues)
+                value = max(value, self.AlphaBetaPruning(state, 1, countGhosts, depth, alpha, beta)[0])
+                minimaxValues.append(value)
+                index += 1
+                alpha = max(alpha, value)
+                if alpha > beta:
+                    break
             evaluatedAction = actions[minimaxValues.index(value)]
         # min (ghost)
         else:
-            # if this is the last ghost to call minimax for this height, increase depth
             if countGhosts == 1:
                 depth += 1
                 nextAgent = 0
@@ -256,17 +255,18 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 nextAgent = agent + 1
             countGhosts -= 1
             # v <- +inf
-            value = 100000
+            value = 10000000
             actions = gameState.getLegalActions(agent)
             minimaxValues = []
+            index = -1
             for a in actions:
                 state = gameState.generateSuccessor(agent, a)
-                v = self.AlphaBetaPruning(state, nextAgent, countGhosts, depth, a, b)
-                if v[0] < b:
-                    return v
-                minimaxValues.append(v[0])
-                a = min(b, v[0])
-            value = min(minimaxValues)
+                value = min(value, self.AlphaBetaPruning(state, nextAgent, countGhosts, depth, alpha, beta)[0])
+                index += 1
+                minimaxValues.append(value)
+                beta = min(beta, value)
+                if alpha > beta:
+                    break
             evaluatedAction = actions[minimaxValues.index(value)]
         return (value, evaluatedAction)
 
