@@ -78,16 +78,16 @@ class ReflexAgent(Agent):
         newGhostsPos = successorGameState.getGhostPositions()
         distances = []
 
-        # store all manhattan distances from food
-        for f in remainFood:
-            distances.append(manhattanDistance(newPos, f))
-
         # if this is a win state, return a very high number
         if successorGameState.isWin():
             return 1000000
         # else if this is a lose state, return a very low number
         elif successorGameState.isLose():
             return -10000000
+
+        # store all manhattan distances from food
+        for f in remainFood:
+            distances.append(manhattanDistance(newPos, f))
 
         # add to minimum distance the remaining food so that positions that
         # have food (meaning they have lower countFood than the others)
@@ -325,7 +325,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                 state = gameState.generateSuccessor(agent, a)
                 expectimaxValues.append(self.expectimax(state, nextAgent, countGhosts, depth)[0])
                 evaluatedAction = a
-            value = sum(expectimaxValues) / len(actions)
+            value = float(sum(expectimaxValues)) / len(actions)
         return (value, evaluatedAction)
 
 def betterEvaluationFunction(currentGameState):
@@ -344,6 +344,7 @@ def betterEvaluationFunction(currentGameState):
         return 100000
 
     pacmanPos = currentGameState.getPacmanPosition()
+    foodValue = 0
     ghostValue = 0
     pelletValue = 0
 
@@ -366,9 +367,6 @@ def betterEvaluationFunction(currentGameState):
             scaredGhostsFractions.append(1 / mdGhost)
         else:
             activeGhostsFractions.append(1 / mdGhost)
-            # if mdGhost == 1:
-            #     ghostValue -= 1.5
-            #     nearGhost = True
     if len(activeGhostsFractions) > 0:
         ghostValue -= max(activeGhostsFractions) * 2
     if len(scaredGhostsFractions) > 0:
