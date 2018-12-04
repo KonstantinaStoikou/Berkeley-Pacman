@@ -216,8 +216,59 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
           Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        countGhosts = gameState.getNumAgents() - 1
+        a = -100000
+        b = 100000
+        return self.AlphaBetaPruning(gameState, 0, countGhosts, 0, a, b)[1]
+
+    def AlphaBetaPruning(self, gameState, agent, countGhosts, depth, a, b):
+        # if TERMINAL-TEST(state) then return UTILITY(state)
+        if not gameState.getLegalActions(agent):
+            return (self.evaluationFunction(gameState), 0)
+
+        # if maximum depth is reached
+        if depth == self.depth:
+            return (self.evaluationFunction(gameState), 0)
+
+        # max (pacman)
+        if agent == 0:
+            # v <- -inf
+            value = -100000
+            actions = gameState.getLegalActions(agent)
+            minimaxValues = []
+            for a in actions:
+                state = gameState.generateSuccessor(agent, a)
+                countGhosts = gameState.getNumAgents() - 1
+                v = self.AlphaBetaPruning(state, 1, countGhosts, depth, a, b)
+                if v[0] > b:
+                    return v
+                minimaxValues.append(v[0])
+                a = max(a, v[0])
+            value = max(minimaxValues)
+            evaluatedAction = actions[minimaxValues.index(value)]
+        # min (ghost)
+        else:
+            # if this is the last ghost to call minimax for this height, increase depth
+            if countGhosts == 1:
+                depth += 1
+                nextAgent = 0
+            else:
+                nextAgent = agent + 1
+            countGhosts -= 1
+            # v <- +inf
+            value = 100000
+            actions = gameState.getLegalActions(agent)
+            minimaxValues = []
+            for a in actions:
+                state = gameState.generateSuccessor(agent, a)
+                v = self.AlphaBetaPruning(state, nextAgent, countGhosts, depth, a, b)
+                if v[0] < b:
+                    return v
+                minimaxValues.append(v[0])
+                a = min(b, v[0])
+            value = min(minimaxValues)
+            evaluatedAction = actions[minimaxValues.index(value)]
+        return (value, evaluatedAction)
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
