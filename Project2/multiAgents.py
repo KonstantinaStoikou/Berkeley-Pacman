@@ -82,16 +82,19 @@ class ReflexAgent(Agent):
         for f in remainFood:
             distances.append(manhattanDistance(newPos, f))
 
-        # find minimum distance
-        if countFood == 0:
-            minDistance = 0
-        else:
-            # add to minimum distance the remaining food so that positions that
-            # have food (meaning they have lower countFood than the others)
-            # will get an advantage (and to make this advantage distinct, multiply
-            # by a high number because a position with no food might have the same
-            # value with one that has food, if a high number is not provided)
-            minDistance = min(distances) + countFood * 1000
+        # if this is a win state, return a very high number
+        if successorGameState.isWin():
+            return 1000000
+        # else if this is a lose state, return a very low number
+        elif successorGameState.isLose():
+            return -10000000
+
+        # add to minimum distance the remaining food so that positions that
+        # have food (meaning they have lower countFood than the others)
+        # will get an advantage (and to make this advantage distinct, multiply
+        # by a high number because a position with no food might have the same
+        # value with one that has food, if a high number is not provided)
+        minDistance = min(distances) + countFood * 1000
 
         # the highest value should be the optimal move so the least minimum
         # distance should be changed to the highest value
@@ -99,11 +102,8 @@ class ReflexAgent(Agent):
 
         for g in newGhostsPos:
             # if a ghost is getting very close (maximum one cell away)
-            # set a very low value (but if ghost catches pacman set an even lower
-            # value)
-            if manhattanDistance(newPos, g) == 0:
-                value -= 10000000
-            elif manhattanDistance(newPos, g) == 1:
+            # set a very low value (but less that a lose state's value)
+            if manhattanDistance(newPos, g) == 1:
                 value -= 100000
 
         return value
@@ -335,8 +335,51 @@ def betterEvaluationFunction(currentGameState):
 
       DESCRIPTION: <write something here so we know what you did>
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    # if this is a lose state, return a very low number
+    if currentGameState.isLose():
+        return -100000
+    # else if this is a win state, return a very high number
+    elif currentGameState.isWin():
+        return 100000
+
+    pacmanPos = currentGameState.getPacmanPosition()
+    ghostValue = 0
+    pelletValue = 0
+
+    # Food
+    foodPos = currentGameState.getFood().asList()
+    remainFood = len(foodPos)
+    foodFractions = []
+    # store all fractions with manhattan distances of food
+    for f in foodPos:
+        foodFractions.append(1 / manhattanDistance(pacmanPos, f))
+    foodValue = max(foodFractions) * 300 - remainFood * 1000
+
+    # Ghosts
+    activeGhostsFractions = []
+    scaredGhostsFractions = []
+    for g in currentGameState.getGhostStates():
+        ghostPos = g.getPosition()
+        mdGhost = manhattanDistance(pacmanPos, ghostPos)
+        if g.scaredTimer > 0:
+            scaredGhostsFractions.append(1 / mdGhost)
+        else:
+            activeGhostsFractions.append(1 / mdGhost)
+            # if mdGhost == 1:
+            #     ghostValue -= 10000
+            #     nearGhost = True
+    if len(activeGhostsFractions) > 0:
+        ghostValue -= max(activeGhostsFractions) * 200
+    if len(scaredGhostsFractions) > 0:
+        ghostValue += max(scaredGhostsFractions) * 150
+
+    # Pellets
+    pelletsPos = currentGameState.getCapsules()
+    # for p in pelletsPos:
+        # mdPellet = manhattanDistance(pacmanPos, p)
+    # pelletValue = len(pelletsPos)
+    return foodValue + ghostValue + pelletValue
 
 # Abbreviation
 better = betterEvaluationFunction
