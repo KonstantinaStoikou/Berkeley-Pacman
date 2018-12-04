@@ -349,12 +349,12 @@ def betterEvaluationFunction(currentGameState):
 
     # Food
     foodPos = currentGameState.getFood().asList()
-    remainFood = len(foodPos)
+
     foodFractions = []
     # store all fractions with manhattan distances of food
     for f in foodPos:
         foodFractions.append(1 / manhattanDistance(pacmanPos, f))
-    foodValue = max(foodFractions) * 300 - remainFood * 1000
+    foodValue = max(foodFractions) * 3 - len(foodPos) * 10
 
     # Ghosts
     activeGhostsFractions = []
@@ -367,18 +367,16 @@ def betterEvaluationFunction(currentGameState):
         else:
             activeGhostsFractions.append(1 / mdGhost)
             # if mdGhost == 1:
-            #     ghostValue -= 10000
+            #     ghostValue -= 1.5
             #     nearGhost = True
     if len(activeGhostsFractions) > 0:
-        ghostValue -= max(activeGhostsFractions) * 200
+        ghostValue -= max(activeGhostsFractions) * 2
     if len(scaredGhostsFractions) > 0:
-        ghostValue += max(scaredGhostsFractions) * 150
+        ghostValue += max(scaredGhostsFractions) * 1.5
 
     # Pellets
-    pelletsPos = currentGameState.getCapsules()
-    # for p in pelletsPos:
-        # mdPellet = manhattanDistance(pacmanPos, p)
-    # pelletValue = len(pelletsPos)
+    pelletValue = -len(currentGameState.getCapsules()) * 6
+
     return foodValue + ghostValue + pelletValue
 
 # Abbreviation
