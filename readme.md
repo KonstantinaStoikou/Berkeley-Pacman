@@ -1,0 +1,1 @@
+## Solutions to Berkeley's Pacman projects
