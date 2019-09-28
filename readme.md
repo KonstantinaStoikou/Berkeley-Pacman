@@ -1,1 +1,1 @@
-## Solutions to Berkeley's Pacman projects
+## Solutions to projects 1 and 2 of Berkeley's Pacman
